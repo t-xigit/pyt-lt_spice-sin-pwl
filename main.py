@@ -6,7 +6,15 @@ Y = [32,36,39,52,61,72,77,75,68,57,48,48]
 
 
 def plot_tutorial():
-    plot.scatter(X,Y)
+    plot.scatter(X,Y, s=60, c='red', marker='^')
+
+    plot.title('Relationship Between Temperature and Iced Coffee Sales')
+    plot.xlabel('Cups of Iced Coffee Sold')
+    plot.ylabel('Temperature in Fahrenheit')
+
+    plot.xlim(0,1000)
+    plot.ylim(0,100)
+
     plot.show()
 
 def main():
