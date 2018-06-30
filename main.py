@@ -61,7 +61,6 @@ def plot_sinus(steps):
     plot.show()
 
 def plot_table(steps):
-#todo Degree, Radian, sine(Radian), Normalize to Zero, %
 
     degree = np.arange(0, math.degrees(2*Pi), math.degrees(steps))
     radian = np.arange(0, 2*Pi, steps)
@@ -77,7 +76,6 @@ def plot_table(steps):
         print("{0:.4f}".format(radian[index]) , end =" --- ")
         print("{0:.4f}".format(sin_rad[index]) , end =" --- ")
         print("{0:.4f}".format(normalized[index]) , end =" --- ")
-
         print ("{0:.2f}".format(percent[index]) , end ='\n')
 
         index = index + 1
@@ -86,7 +84,7 @@ def main():
     print ("Starting main()")
     
     steps = angle_steps(sample_points)
-    #plot_sinus(steps)
+    plot_sinus(steps)
     plot_table(steps)
     #plot_sinus_tutorial()
     
