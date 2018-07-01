@@ -8,6 +8,7 @@ Y = [32,36,39,52,61,72,77,75,68,57,48,48]
 #amount of points within one full cycle
 sample_points = 12
 Pi = math.pi
+Sin_Frequenzy = 100
 
 def angle_steps(sample_rate):    
     angle = 2*Pi/sample_rate
@@ -68,23 +69,34 @@ def plot_table(steps):
     normalized = 1 + sin_rad
     percent = normalized / 2
 
+    #the time of one pulse equals to duty cycle 100%
+    period = 1/Sin_Frequenzy
+    pulse_time = period / steps 
+
+    on_time = pulse_time * percent
+    off_time = pulse_time - on_time
+
     index = 0
-    print ("Degree" + " -- " + "Radian" + " -- " + "sine(Radian)" + " -- " + " Normalized to 0")
+    print ("Pulse time in ms: " + "{0:.2f}" .format(pulse_time*1000 ))
+    print ("Degree" + " -- " + "Radian" + " -- " + "sine(Radian)" + " -- " + " Normalized" + " -- " + "Percent"+ " -- " + " On Time" + " -- " + " Off Time")
         
     for x in np.nditer(degree):
         print(round(degree[index]) , end =" --- ")
         print("{0:.4f}".format(radian[index]) , end =" --- ")
         print("{0:.4f}".format(sin_rad[index]) , end =" --- ")
         print("{0:.4f}".format(normalized[index]) , end =" --- ")
-        print ("{0:.2f}".format(percent[index]) , end ='\n')
+        print ("{0:.2f}".format(percent[index]) , end =" --- ")
+        print ("{0:.4f}".format(on_time[index]) , end =" --- ")
+        print ("{0:.4f}".format(off_time[index]) , end ='\n')
 
-        index = index + 1
+        print ("this the index --->" + str(x))
+        index += 1
 
 def main():
     print ("Starting main()")
     
     steps = angle_steps(sample_points)
-    plot_sinus(steps)
+    #plot_sinus(steps)
     plot_table(steps)
     #plot_sinus_tutorial()
     
