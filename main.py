@@ -2,18 +2,22 @@
 import matplotlib.pyplot as plot
 import numpy as np
 import math
+import datetime
+import time
 
 X = [590,540,740,130,810,300,320,230,470,620,770,250]
 Y = [32,36,39,52,61,72,77,75,68,57,48,48]
 #amount of points within one full cycle
-sample_points = 10
+sample_points = 12
 Pi = math.pi
 Sin_Frequenzy = 100
 
-def angle_steps(sample_rate):    
-    angle = 2*Pi/sample_rate
-    print("Angle between Steps in ", str(angle))
-    return angle
+def angle_steps(sample_points):    
+    angle_rad = 2*Pi/sample_points
+    angle_deg = 360/sample_points
+    print("Angle between Sample Points in Rad ", str(angle_rad))
+    print("Angle between Sample Points in Degree ", str(angle_deg))
+    return angle_rad
 
 def plot_tutorial():
     plot.scatter(X,Y, s=60, c='red', marker='^')
@@ -42,6 +46,7 @@ def plot_sinus_tutorial():
 
 def plot_sinus(steps):
 
+    now = datetime.datetime.now()
     t = np.arange(0.0, 2*Pi, steps)
     s = 1 + np.sin(t)
     print(s)
@@ -56,13 +61,15 @@ def plot_sinus(steps):
 
     plot.xlabel('time (s)')
     plot.ylabel('voltage (mV)')
-    plot.title('About as simple as it gets, folks')
+    plot.title('About as simple as it gets -' + now.strftime("%d-%m-%Y  %H:%M"))
     plot.grid(True)
     plot.savefig("test.png")
     plot.show()
 
 def plot_table(steps):
 
+    # Cutting of the float is neccessary othersise np.arrange creates arrys with randon length
+    steps=int(math.degrees(2*Pi) / math.degrees(steps))
     degree = np.arange(0, math.degrees(2*Pi), math.degrees(steps))
     radian = np.arange(0, 2*Pi, steps)
     sin_rad = np.sin(radian)
@@ -89,15 +96,15 @@ def plot_table(steps):
         print ("{0:.4f}".format(on_time[index]) , end =" --- ")
         print ("{0:.4f}".format(off_time[index]) , end ='\n')
 
-        print ("this the index --->" + str(x))
+        #print ("this the index --->" + str(x))
         index += 1
 
 def main():
     print ("Starting main()")
     
     steps = angle_steps(sample_points)
-    plot_sinus(steps)
+    #plot_sinus(steps)
     plot_table(steps)
-    plot_sinus_tutorial()
+    #plot_sinus_tutorial()
     
 main()
