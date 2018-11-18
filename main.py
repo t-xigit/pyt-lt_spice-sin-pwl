@@ -78,6 +78,7 @@ def plot_table(sample_points):
         print('You fucked up stupid np.arrange failed')
         exit()
 
+    #Don't want to have negative values therefore lift the sinwave by 1
     normalized = 1 + sin_rad
     percent = normalized / 2
 
@@ -85,24 +86,40 @@ def plot_table(sample_points):
     period = 1/Sin_Frequenzy
     pulse_time = period / sample_points
 
-    on_time = pulse_time * percent
-    off_time = pulse_time - on_time
+    #Doing some logic here to have prettier prints
+    time_unit_multiplier = 1
+    period_unit_multiplier = 1
+    TimeUnitPeriod = "s"
+    TimeUnitPulse  = "s"
+
+    if Sin_Frequenzy <= 1000:
+            #Frequenzy Below 1KHz
+            time_unit_multiplier = 1000
+            period_unit_multiplier = 1000
+            TimeUnitPeriod = "ms"
+            TimeUnitPulse  = "us"
+
+    on_time  = pulse_time * percent 
+    off_time = pulse_time - on_time 
 
     index = 0
-    print ("Pulse time in ms: " + "{0:.2f}" .format(pulse_time*1000 ))
+    print ("Period in "+ TimeUnitPeriod + " {0:.2f}" .format(period*period_unit_multiplier ))
+    print ("Pulse time in: " + TimeUnitPulse + " {0:.2f}" .format(pulse_time*time_unit_multiplier ))
 
+    OnTimeHeader = "On Time in " + TimeUnitPulse
+    OffTimeHeader = "Off Time in " + TimeUnitPulse
     index = 0
     y = PrettyTable()
-    y.field_names = ["Degree", "Radian", "sine(Radian)", "Normalized", "Percent", "On Time", "Off Time"]
+    y.field_names = ["Degree", "Radian", "sine(Radian)", "Normalized", "Percent", OnTimeHeader, OffTimeHeader]
 
     for x in np.nditer(degree):
         y.add_row(["{0:.2f}".format(degree[index]),
         "{0:.2f}".format(radian[index]),
         "{0:.2f}".format(sin_rad[index]),
         "{0:.2f}".format(normalized[index]),
-        "{0:.1f}".format(percent[index]),
-        "{0:.2f}".format(on_time[index]),
-        "{0:.2f}".format(off_time[index])])
+        "{0:.1f}".format((percent[index])*100),
+        "{0:.8f}".format(on_time[index]* time_unit_multiplier),
+        "{0:.8f}".format(off_time[index]* time_unit_multiplier)])
 
         index += 1
     print(y)
