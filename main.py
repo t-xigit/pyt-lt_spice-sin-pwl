@@ -210,6 +210,11 @@ def plot_OnTime(sample_points):
     print('Calculated at - ' + datetime.datetime.now().strftime("%d-%m-%Y  %H:%M"))
     print(y)
 
+    FileName = 'Frequenzy_'+ str(Sin_Frequenzy) + 'Hz'+'.pwl'
+    print(FileName)
+    with open(FileName,'w') as pwl:
+        pwl.write(str(y))
+
     t = (on_time*1000)
     s = degree
     plot.bar(s, t)
