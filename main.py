@@ -103,8 +103,33 @@ def plot_table(sample_points):
     off_time = pulse_time - on_time 
 
     index = 0
-    print ("Period in "+ TimeUnitPeriod + " {0:.2f}" .format(period*period_unit_multiplier ))
-    print ("Pulse time in: " + TimeUnitPulse + " {0:.2f}" .format(pulse_time*time_unit_multiplier ))
+
+    x = PrettyTable()
+    x.field_names = ["Sample Points", str(sample_points)]
+    x.add_row(["Period in "+ TimeUnitPeriod, " {0:.2f}" .format(period*period_unit_multiplier )])
+    x.add_row(["Pulse time in "+ TimeUnitPeriod, " {0:.2f}" .format(pulse_time*time_unit_multiplier )])
+    print(x)
+
+    OnTimeHeader = "On Time in " + TimeUnitPulse
+    OffTimeHeader = "Off Time in " + TimeUnitPulse
+    index = 0
+    y = PrettyTable()
+    y.field_names = ["Degree", "Radian", "sine(Radian)", "Normalized", "Percent", OnTimeHeader, OffTimeHeader]
+
+    for x in np.nditer(degree):
+        y.add_row(["{0:.2f}".format(degree[index]),
+        "{0:.2f}".format(radian[index]),
+        "{0:.2f}".format(sin_rad[index]),
+        "{0:.2f}".format(normalized[index]),
+        "{0:.1f}".format((percent[index])*100),
+        "{0:.8f}".format(on_time[index]* time_unit_multiplier),
+        "{0:.8f}".format(off_time[index]* time_unit_multiplier)])
+
+        index += 1
+
+    print('Calculated at - ' + datetime.datetime.now().strftime("%d-%m-%Y  %H:%M"))
+    print(y)
+
 
     OnTimeHeader = "On Time in " + TimeUnitPulse
     OffTimeHeader = "Off Time in " + TimeUnitPulse
