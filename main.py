@@ -15,19 +15,36 @@ class SinSignal:
 
     # Initializer / Instance Attributes
     def __init__(self, frequenzy, sample_points):
+        #Frequenzy of Sinus Signal to be Digitalized
         self.frequenzy = int(frequenzy)
+        #Amount of Sample Points for one Period
         self.sample_points = int(sample_points)
+        #Sample Points in Degrees
         self.sp_degree = np.arange(0, sample_points, 1)
+        #Sample Points Radian
         self.sp_radian = np.arange(0, sample_points, 1)
-        self.sp_normalized = np.arange(0, sample_points, 1)
-        self.sp_percent = np.arange(0, sample_points, 1)
+        #Y Achses Value for Sample Points before Normalzing
         self.sp_sin_rad =  np.arange(0, sample_points, 1)
+        #Normalized Y Values
+        self.sp_normalized = np.arange(0, sample_points, 1)
+        #Y Values in Percent
+        self.sp_percent = np.arange(0, sample_points, 1)
+        #On time of a single pulse
         self.sp_on_time  = np.arange(0, sample_points, 1)
+        #Off time of single pulse
         self.sp_off_time  = np.arange(0, sample_points, 1)
         #the time of one pulse equals to duty cycle 100%
         self.period = 1/self.frequenzy
+        #Total pulse time of single pulse
         self.pulse_time = self.period / self.sample_points
-    #Calculates the Sample Points in Rad and Degree
+        #X Axes value for Sample Point
+        self.sp_sample_time = np.arange(0, sample_points, 1)
+        #Time when pulse goes high
+        self.sp_high_on  = np.arange(0, sample_points, 1)
+        #Time when pulse goes low
+        self.sp_high_off = np.arange(0, sample_points, 1)
+
+    #Calculates the Sample Points
     def calculate_sample_points(self):
         print("Sample Points calculated: ", str(self.sample_points))
         #Rad per Step
@@ -44,6 +61,8 @@ class SinSignal:
 
         if self.sp_radian.size != self.sp_degree.size:
             print('You fucked up stupid np.arrange failed')
+            #Don't know yet to solve that in better way, happens to rounding issues
+            #when doing angle_deg = 360/self.sample_points
             exit()
 
         #Calculate Y Axis Values
@@ -54,13 +73,17 @@ class SinSignal:
         print("Calculating Sample Points in %")
         self.sp_percent = self.sp_normalized / 2
         print("Calculating On Time for Pulses")
-        on_time  = self.pulse_time * self.sp_percent
+        self.sp_on_time  = self.pulse_time * self.sp_percent
         print("Calculating Off Time for Pulses")
-        off_time = self.pulse_time - on_time 
+        self.sp_off_time = self.pulse_time - self.sp_on_time 
+
+        self.sp_sample_time = (self.sp_radian/2*Pi)*self.period
+        self.sp_high_on  = self.sp_sample_time -(self.sp_on_time/2)
+        self.sp_high_off = self.sp_sample_time +(self.sp_on_time/2)
 
     def plot_sample_points(self):
 
-        print("Ploting Table: ", str(self.sample_points))
+        print("Ploting Pretty Table: ")
 
         #Doing some logic here to have prettier prints
         time_unit_multiplier = 1
@@ -107,8 +130,6 @@ class SinSignal:
 
         print("Plot OnTime")
 
-        sample_time = (self.sp_radian/2*Pi)*self.period
-
         #Doing some logic here to have prettier prints
         time_unit_multiplier = 1
         period_unit_multiplier = 1
@@ -121,9 +142,6 @@ class SinSignal:
                 period_unit_multiplier = 1000
                 TimeUnitPeriod = "ms"
                 TimeUnitPulse  = "us"
-
-        high_on  = sample_time -(self.sp_on_time/2)
-        high_off = sample_time +(self.sp_on_time/2)
 
         index = 0
 
@@ -147,9 +165,9 @@ class SinSignal:
             "{0:.2f}".format(self.sp_sin_rad[index]),
             "{0:.2f}".format(self.sp_normalized[index]),
             "{0:.1f}".format((self.sp_percent[index])*100),
-            "{0:.2f}".format((sample_time[index])*1000),
-            "{0:.2f}".format((high_on[index])*1000),
-            "{0:.2f}".format((high_off[index])*1000),
+            "{0:.2f}".format((self.sp_sample_time[index])*1000),
+            "{0:.2f}".format((self.sp_high_on[index])*1000),
+            "{0:.2f}".format((self.sp_high_off[index])*1000),
             "{0:.8f}".format(self.sp_on_time[index]* time_unit_multiplier),
             "{0:.8f}".format(self.sp_off_time[index]* time_unit_multiplier)])
 
@@ -159,12 +177,12 @@ class SinSignal:
         print(y)
 
         FileName = 'Frequenzy_'+ str(self.frequenzy) + 'Hz'+'.pwl'
-        print(FileName)
+        print("Creating File: " + FileName)
         with open(FileName,'w') as pwl:
             pwl.write(str(y))
 
-        t = (on_time*1000)
-        s = degree
+        t = (self.sp_on_time*1000)
+        s = self.sp_degree
         plot.bar(s, t)
 
         plot.xlabel('Degree')
@@ -178,5 +196,6 @@ def main():
     signal = SinSignal(100,128)
     signal.calculate_sample_points()
     signal.plot_sample_points()
+    signal.plot_OnTime()
 
 main()
