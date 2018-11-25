@@ -181,7 +181,7 @@ class SinSignal:
         with open(FileName,'w') as pwl:
             pwl.write(str(y))
 
-        t = (self.sp_on_time*1000)
+        t = self.sp_on_time*1000
         s = self.sp_degree
         plot.bar(s, t)
 
