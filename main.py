@@ -14,11 +14,16 @@ class SinSignal:
     typ = 'sinus'
 
     # Initializer / Instance Attributes
-    def __init__(self, frequenzy, sample_points):
+    def __init__(self, frequenzy, sample_points, pulse_amp, rise_time, fall_time):
         #Frequenzy of Sinus Signal to be Digitalized
         self.frequenzy = int(frequenzy)
         #Amount of Sample Points for one Period
         self.sample_points = int(sample_points)
+        #Amplitude for PWL Files
+        self.pulse_amp = pulse_amp
+        #Delay in toggling the pulse level
+        self.rise_time = float(rise_time)
+        self.fall_time = float(fall_time)
         #Sample Points in Degrees
         self.sp_degree = np.arange(0, sample_points, 1)
         #Sample Points Radian
@@ -39,6 +44,10 @@ class SinSignal:
         self.pulse_time = self.period / self.sample_points
         #X Axes value for Sample Point
         self.sp_sample_time = np.arange(0, sample_points, 1)
+        #X Axes value for actuall PWL file, needs four points per sample
+        self.sp_toggle_time = np.arange(0, sample_points*4, float(1))
+        #X Axes value for actuall PWL file, needs four points per sample
+        self.sp_pulse_state = np.arange(0, sample_points*4, int(1))
         #Time when pulse goes high
         self.sp_high_on  = np.arange(0, sample_points, 1)
         #Time when pulse goes low
@@ -78,8 +87,39 @@ class SinSignal:
         self.sp_off_time = self.pulse_time - self.sp_on_time 
 
         self.sp_sample_time = (self.sp_radian/2*Pi)*self.period
+
+    #Calculate On and Off Points
+    def calculate_on_off_points(self):
+        print("Calculate On, Off Points")
+
         self.sp_high_on  = self.sp_sample_time -(self.sp_on_time/2)
         self.sp_high_off = self.sp_sample_time +(self.sp_on_time/2)
+        
+        index = 0
+        double_inc_index = 0
+        while index < self.sp_sample_time.size:
+            #First point before Rising Edge
+            self.sp_toggle_time[index*4] = (self.sp_high_on[index]) - self.rise_time
+            #Value befor rise
+            self.sp_pulse_state[index*4] = 0
+            #Time at rise
+            self.sp_toggle_time[(index*4)+1] = self.sp_high_on[index]
+            self.sp_pulse_state[(index*4)+1] = self.pulse_amp
+            #End of High Pulse
+            self.sp_toggle_time[(index*4)+2] = (self.sp_high_off[index])
+            self.sp_pulse_state[(index*4)+2] = self.pulse_amp
+            #Falling Edge
+            self.sp_toggle_time[(index*4)+3] = self.sp_high_off[index]
+            self.sp_pulse_state[(index*4)+3] = 0
+
+            print(index)
+            print(str(self.sp_toggle_time[index*4]) + " ---- " + str(self.sp_pulse_state[index*4]))
+            print(str(self.sp_toggle_time[index*4+1]) + " ---- " + str(self.sp_pulse_state[index*4+1]))
+            print(str(self.sp_toggle_time[index*4+2]) + " ---- " + str(self.sp_pulse_state[index*4+2]))
+            print(str(self.sp_toggle_time[index*4+3]) + " ---- " + str(self.sp_pulse_state[index*4+3]))
+
+
+            index +=1
 
     def plot_sample_points(self):
 
@@ -191,11 +231,29 @@ class SinSignal:
         plot.grid(True)
         plot.show()
 
+    def plot_pwm_pulses(self):
+
+        print("Plot PWM Pulses")
+
+        x = self.sp_toggle_time
+        y = self.sp_pulse_state
+        #plot.scatter(x,y)
+        plot.plot(x,y)
+        #plot.bar(x, y)
+
+        plot.xlabel('Degree')
+        plot.ylabel('OnTime')
+        plot.title('OnTime')
+        plot.grid(True)
+        plot.show()
+
 def main():
     print ("Starting main()")
-    signal = SinSignal(100,128)
+    signal = SinSignal(100,32,1,0.0001, 0.0001)
     signal.calculate_sample_points()
+    signal.calculate_on_off_points()
     signal.plot_sample_points()
-    signal.plot_OnTime()
+    #signal.plot_OnTime()
+    signal.plot_pwm_pulses()
 
 main()
