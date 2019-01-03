@@ -94,12 +94,13 @@ class SinSignal:
 
         self.sp_high_on  = self.sp_sample_time -(self.sp_on_time/2)
         self.sp_high_off = self.sp_sample_time +(self.sp_on_time/2)
-        
+
         index = 0
-        double_inc_index = 0
+
         while index < self.sp_sample_time.size:
             #First point before Rising Edge
-            self.sp_toggle_time[index*4] = (self.sp_high_on[index]) - self.rise_time
+            #self.sp_toggle_time[index*4] = (self.sp_high_on[index]) - self.rise_time
+            self.sp_toggle_time[index*4] = (self.sp_high_on[index])
             #Value befor rise
             self.sp_pulse_state[index*4] = 0
             #Time at rise
@@ -224,6 +225,7 @@ class SinSignal:
         t = self.sp_on_time*1000
         s = self.sp_degree
         plot.bar(s, t)
+        plot.plot(self.sp_degree, math.sin(self.sp_degree))
 
         plot.xlabel('Degree')
         plot.ylabel('OnTime')
@@ -237,23 +239,23 @@ class SinSignal:
 
         x = self.sp_toggle_time
         y = self.sp_pulse_state
-        #plot.scatter(x,y)
-        plot.plot(x,y)
+        plot.scatter(x,y)
+        plot.plot(self.sp_normalized)
         #plot.bar(x, y)
 
-        plot.xlabel('Degree')
-        plot.ylabel('OnTime')
-        plot.title('OnTime')
+        plot.xlabel('Pulse t')
+        plot.ylabel('High/Low')
+        plot.title('PWM to Sin')
         plot.grid(True)
         plot.show()
 
 def main():
     print ("Starting main()")
-    signal = SinSignal(100,32,1,0.0001, 0.0001)
+    signal = SinSignal(10,12,1,0.0001, 0.0001)
     signal.calculate_sample_points()
     signal.calculate_on_off_points()
     signal.plot_sample_points()
-    #signal.plot_OnTime()
-    signal.plot_pwm_pulses()
+    signal.plot_OnTime()
+    #signal.plot_pwm_pulses()
 
 main()
