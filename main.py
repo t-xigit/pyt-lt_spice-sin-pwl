@@ -4,32 +4,41 @@ import numpy as np
 import math
 import datetime
 import time
+import sys
+from shutil import copyfile
 from prettytable import PrettyTable
+
+export_dir = "C:/Users/timur/repo/hw/hw-LTspiceSimulations/FM/pwl_to_sin/sinsin.pwl"
 
 Pi = math.pi
 
 class SinSignal:
+    """Sinuse Signal Class containing all attributes and methods.
+
+    Example:
+        signal = SinSignal(100,128)
+
+    Args:
+        frequenzy (int): Frequenzy of Signal to be sampled.
+        sample_points (int): Resolution per period.
+
+    """
 
     # Class Attribute
     typ = 'sinus'
 
     # Initializer / Instance Attributes
-    def __init__(self, frequenzy, sample_points, pulse_amp, rise_time, fall_time):
+    def __init__(self, frequenzy, sample_points):
         #Frequenzy of Sinus Signal to be Digitalized
         self.frequenzy = int(frequenzy)
         #Amount of Sample Points for one Period
         self.sample_points = int(sample_points)
-        #Amplitude for PWL Files
-        self.pulse_amp = pulse_amp
-        #Delay in toggling the pulse level
-        self.rise_time = float(rise_time)
-        self.fall_time = float(fall_time)
         #Sample Points in Degrees
         self.sp_degree = np.arange(0, sample_points, 1)
         #Sample Points Radian
         self.sp_radian = np.arange(0, sample_points, 1)
         #Y Achses Value for Sample Points before Normalzing
-        self.sp_sin_rad =  np.arange(0, sample_points, 1)
+        self.sp_sin_rad = np.arange(0, sample_points, 1)
         #Normalized Y Values
         self.sp_normalized = np.arange(0, sample_points, 1)
         #Y Values in Percent
@@ -44,10 +53,6 @@ class SinSignal:
         self.pulse_time = self.period / self.sample_points
         #X Axes value for Sample Point
         self.sp_sample_time = np.arange(0, sample_points, 1)
-        #X Axes value for actuall PWL file, needs four points per sample
-        self.sp_toggle_time = np.arange(0, sample_points*4, float(1))
-        #X Axes value for actuall PWL file, needs four points per sample
-        self.sp_pulse_state = np.arange(0, sample_points*4, int(1))
         #Time when pulse goes high
         self.sp_high_on  = np.arange(0, sample_points, 1)
         #Time when pulse goes low
@@ -87,40 +92,8 @@ class SinSignal:
         self.sp_off_time = self.pulse_time - self.sp_on_time 
 
         self.sp_sample_time = (self.sp_radian/2*Pi)*self.period
-
-    #Calculate On and Off Points
-    def calculate_on_off_points(self):
-        print("Calculate On, Off Points")
-
-        self.sp_high_on  = self.sp_sample_time -(self.sp_on_time/2)
+        self.sp_high_on = self.sp_sample_time - (self.sp_on_time/2)
         self.sp_high_off = self.sp_sample_time +(self.sp_on_time/2)
-
-        index = 0
-
-        while index < self.sp_sample_time.size:
-            #First point before Rising Edge
-            #self.sp_toggle_time[index*4] = (self.sp_high_on[index]) - self.rise_time
-            self.sp_toggle_time[index*4] = (self.sp_high_on[index])
-            #Value befor rise
-            self.sp_pulse_state[index*4] = 0
-            #Time at rise
-            self.sp_toggle_time[(index*4)+1] = self.sp_high_on[index]
-            self.sp_pulse_state[(index*4)+1] = self.pulse_amp
-            #End of High Pulse
-            self.sp_toggle_time[(index*4)+2] = (self.sp_high_off[index])
-            self.sp_pulse_state[(index*4)+2] = self.pulse_amp
-            #Falling Edge
-            self.sp_toggle_time[(index*4)+3] = self.sp_high_off[index]
-            self.sp_pulse_state[(index*4)+3] = 0
-
-            print(index)
-            print(str(self.sp_toggle_time[index*4]) + " ---- " + str(self.sp_pulse_state[index*4]))
-            print(str(self.sp_toggle_time[index*4+1]) + " ---- " + str(self.sp_pulse_state[index*4+1]))
-            print(str(self.sp_toggle_time[index*4+2]) + " ---- " + str(self.sp_pulse_state[index*4+2]))
-            print(str(self.sp_toggle_time[index*4+3]) + " ---- " + str(self.sp_pulse_state[index*4+3]))
-
-
-            index +=1
 
     def plot_sample_points(self):
 
@@ -217,15 +190,14 @@ class SinSignal:
         print('Calculated at - ' + datetime.datetime.now().strftime("%d-%m-%Y  %H:%M"))
         print(y)
 
-        FileName = 'Frequenzy_'+ str(self.frequenzy) + 'Hz'+'.pwl'
+        FileName = 'Frequenzy_'+ str(self.frequenzy) + 'Hz'+'.txt'
         print("Creating File: " + FileName)
         with open(FileName,'w') as pwl:
             pwl.write(str(y))
 
-        t = self.sp_on_time*1000
+        t =(self.sp_on_time*1000)
         s = self.sp_degree
         plot.bar(s, t)
-        plot.plot(self.sp_degree, math.sin(self.sp_degree))
 
         plot.xlabel('Degree')
         plot.ylabel('OnTime')
@@ -233,29 +205,66 @@ class SinSignal:
         plot.grid(True)
         plot.show()
 
-    def plot_pwm_pulses(self):
+    def plot_PWL_File(self, gpio_volt):
 
-        print("Plot PWM Pulses")
+        print("Plot PWL Output File")
 
-        x = self.sp_toggle_time
-        y = self.sp_pulse_state
-        plot.scatter(x,y)
-        plot.plot(self.sp_normalized)
-        #plot.bar(x, y)
+        sample_point_buff = []
 
-        plot.xlabel('Pulse t')
-        plot.ylabel('High/Low')
-        plot.title('PWM to Sin')
+        index = 0
+        rise_time = 0.00001
+        fall_time = rise_time
+
+        for x in np.nditer(self.sp_degree):
+            #Calculate sample points on x axes
+            #1st calculate the high plateau
+            p2 = [float(self.sp_sample_time[index])-(float(self.sp_on_time[index]/2)), gpio_volt]
+            p3 = [p2[0] + float(self.sp_on_time[index]), gpio_volt]
+            p1 = [(p2[0] - rise_time), 0]
+            p4 = [(p3[0] + fall_time), 0]
+
+            sample_point_buff.append(p1)
+            sample_point_buff.append(p2)
+            sample_point_buff.append(p3)
+            sample_point_buff.append(p4)
+
+            print("{0:.6f} {1:.1f}".format(p1[0], p1[1]))
+            print("{0:.6f} {1:.1f}".format(p2[0], p1[1]))
+            print("{0:.6f} {1:.1f}".format(p3[0], p1[1]))
+            print("{0:.6f} {1:.1f}".format(p4[0], p1[1]))
+
+            index += 1
+
+        print('Calculated at - ' + datetime.datetime.now().strftime("%d-%m-%Y  %H:%M"))
+
+        FileName = 'PWL_Frequenzy_'+ str(self.frequenzy) + 'Hz'+'.pwl'
+        t=[]
+        s=[]
+        print("Creating File: " + FileName)
+        with open(FileName,'w') as pwl:
+            for p in sample_point_buff:
+                pwl.write("{0} {1}\n".format(p[0], p[1]))
+                t.append(p[0])
+                s.append(p[1])
+
+        copyfile(FileName, export_dir)
+
+        plot.scatter(t, s)
+        plot.plot(t, s)
+
+        plot.xlabel('t')
+        plot.ylabel('gpio')
+        plot.title('PWL')
         plot.grid(True)
         plot.show()
 
 def main():
-    print ("Starting main()")
-    signal = SinSignal(10,12,1,0.0001, 0.0001)
+    print("Starting main()")
+    signal = SinSignal(100, 8)
     signal.calculate_sample_points()
-    signal.calculate_on_off_points()
     signal.plot_sample_points()
     signal.plot_OnTime()
-    #signal.plot_pwm_pulses()
+    signal.plot_PWL_File(3.3)
+    sys.exit()
 
 main()
